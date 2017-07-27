@@ -1,0 +1,346 @@
+<html>
+<head>
+</head>
+<body>
+<center>
+<canvas id="mycanvas" width="800" height="640" style="background-color:#f7dc6f; margin:0 auto"> </canvas> </center>
+<canvas id ="player1" width="200" height="50" style="background-color: #abebc6 ; margin-top:-640px;margin-left:75px" > </canvas>
+<canvas id ="player2" width="200" height="50" style="background-color: #abebc6 ; margin-top:-640px;margin-left:1075px" > </canvas>
+<div id ="text"></div>
+<div id="hitter"></div>
+</body>
+<script>
+// File variables : turn pos score hitpos missiletype hit invalid
+ var i=1,count=0,gifwidth,intv,gifheight,missiletype;
+ var missiles = ['xFalcon','xSeaEagle','xAgni-V'];
+ var scale = 560/100000;
+ var allText,resl,resll;
+ var hit,left_pos,right_pos,hit_pos,turn,angle,diff,distance,left;
+ var canvas = document.getElementById("mycanvas");
+ var ctxt = canvas.getContext("2d");
+ var ctxp1 = document.getElementById("player1").getContext("2d");
+ var ctxp2 = document.getElementById("player2").getContext("2d");
+	//ctxp1.style.marginTop = "50px";
+ var wall_left = new Image();
+ var wall_right = new Image();
+ var tank_left = new Image();
+ var missile = new Image();
+ var tank_right = new Image();
+ var gif = new Image();
+ wall_left.src = 'images/brick_wall2.png';
+ wall_right.src = 'images/brick_wall2.png';
+ tank_left.src = 'images/tank311.png';
+ tank_right.src = 'images/tank322.png';
+ 
+
+ function readTextFile(file)
+{
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status == 0)
+            {
+                allText = rawFile.responseText;
+                resl = allText.split(/\r?\n/);
+				
+			}
+		}
+      } 
+	  		rawFile.send(null);
+			resll = resl[0].split(" ");
+			player1 = resll[0];
+			player2 = resll[1];
+			ctxp1.font = "italic 30px Arial";
+			ctxp1.fillStyle = '#dc7633';
+			ctxp1.fillText(player1,50,35);
+			ctxp2.font = "italic 30px Arial";
+			ctxp2.fillStyle = '#dc7633';
+			ctxp2.fillText(player2,50,35);
+			
+			start(1);
+}
+
+function gameOver(invalid)
+{
+	if(invalid==0)
+	{
+		var winner;
+		if(parseInt(resll[2]) > parseInt(resll[9]))
+		{
+			winner = player1;
+		}
+		else
+		{
+			winner = player2;
+		}
+	}
+	else
+	{
+		if(invalid==1)
+		winner = player2;
+		else
+		winner = player1;
+	}
+	ctxt.font = "italic 30px Arial";
+	ctxt.fillStyle = '#784212';
+	ctxt.clearRect(250,250,300,300);
+	ctxt.fillText("Game Over",320,300);
+	ctxt.fillText("Winner is : " +winner,280,340);
+}
+
+function Spritesheet(source,cols,rows,x,y)
+{
+	count=0;
+	gif.src = source;
+	gif.onload = function()
+	{
+	gifwidth = (gif.width/cols);
+	//window.alert(gif.width);
+	gifheight = (gif.height/rows);
+	//ctxt.fillText(hit,100,100); ctxt.fillText(left,200,100); ctxt.fillText(i,300,100);
+	if(left==1 && hit==0)
+	ctxt.clearRect(729,right_pos-40,40,80);
+	if(left==0 && hit==0)
+	ctxt.clearRect(30,left_pos-40,40,80);
+	intv = setInterval('drawSprite('+cols+','+rows+','+x+','+y+')',50);
+	}
+}
+ function drawSprite(cols,rows,x,y)
+{
+	if(left==1)
+	{
+		ctxt.clearRect(600,0,200,640);
+		ctxt.drawImage(wall_right,769,0);
+		ctxt.font = "bold 20px Arial";
+		ctxt.fillStyle = ' #784212';
+		ctxt.fillText("Score    : "+resll[9],600,30);
+		ctxt.fillText("Position : "+resll[8],600,55);
+		if(hit!=0)
+		{
+		ctxt.drawImage(tank_right,729,right_pos-40);
+		}
+	}
+	else
+	{
+		ctxt.clearRect(0,0,200,640);
+		ctxt.drawImage(wall_left,0,0);
+		ctxt.font = "bold 20px Arial";
+			ctxt.fillStyle = ' #784212';
+			ctxt.fillText("Score    : "+resll[2],40,30);
+			ctxt.fillText("Position : "+resll[1],40,55);
+		if(hit!=0)
+		{
+			
+			ctxt.drawImage(tank_left,30, left_pos-40);
+		}
+	}
+	ctxt.font = "50px Comic Sans MS";
+	if(hit==0)
+	{
+		ctxt.fillStyle = 'green';
+		ctxt.fillText("HIT !!",330,320);
+	}
+	else
+	{
+		ctxt.fillStyle = 'red';
+		ctxt.fillText("MISS !",330,320);
+	}
+	//window.alert(gifwidth);
+	ctxt.drawImage(gif,(count%cols)*gifwidth,((Math.floor(count/cols))%rows)*gifheight,gifwidth,gifheight,x,y,gifwidth,gifheight);
+	count+=1;
+	if(count==20)
+	{
+		clearInterval(intv);
+		i+=1;
+		if(i==2001)
+		gameOver(0);
+		else
+		start();
+	}
+}
+function drawRotatedImage(image, x, y, angle1) { 
+ 
+	// save the current co-ordinate system 
+	// before we screw with it
+	ctxt.save(); 
+ 
+	// move to the middle of where we want to draw our image
+	ctxt.translate(x, y);
+ 
+	// rotate around that point, converting our 
+	// angle from degrees to radians 
+	ctxt.rotate(angle1);
+ 
+	// draw it up and to the left by half the width
+	// and height of the image 
+	ctxt.drawImage(image, -(image.width/2), -(image.height/2));
+ 
+	// and restore the co-ords to how they were when we began
+	ctxt.restore(); 
+}
+function start()
+{
+	resll = resl[i].split(" ");
+	if(resll[6]=='1')
+	{
+		ctxt.font = "italic 20px Arial";
+		ctxt.fillStyle = '#784212';
+		ctxt.fillText("Invalid Move by: "+player1+" -- Move no.: "+Math.floor((i-1)/2+1),250,200);
+		gameOver(1);
+	}
+	else if(resll[13]=='1')
+	{
+		ctxt.font = "italic 20px Arial";
+		ctxt.fillStyle = '#784212';
+		ctxt.fillText("Invalid Move by: "+player2+" --  Move no.: "+Math.floor((i-1)/2+1),250,200);
+		gameOver(2);
+	}
+	else if(i<11 || i>1990 || resll[5]=='0' || resll[12]=='0')
+	{
+		if(resll[0]=='1')
+		anim_l(0,0);
+		else
+		anim_r(0,0);
+	}
+	else if(i==2001)
+		gameOver(0);
+	else
+	{
+		i+=1; start();
+	}			
+					
+} 
+
+
+ function anim_l(a,b)
+ {
+	missiletype = parseInt(resll[4]);
+	if(missiletype=='1')
+	missile.src = 'images/missile1.png';
+	else if(missiletype=='2')
+	missile.src = 'images/missile2.png';
+	else
+	missile.src = 'images/missile3.png';
+	 // range from 40 to 600 only ( 40 is added just to keep calculations from middle of tank, hit position only ranges from 40 to 600)
+	left_pos = parseInt(resll[1]*scale)+40;  // 40 is tank_left.width/2
+	hit_pos = parseInt(resll[3]*scale)+40;
+	right_pos = parseInt(resll[8]*scale)+40; // 40 is tank_right.width/2
+	if(Math.abs(hit_pos - right_pos) < 41 && hit!=0)
+	{
+	 hit_pos = right_pos+40; 
+	}
+	
+	diff =(hit_pos) - (left_pos); left =  1;
+	hit = parseInt(resll[5]);
+	distance = 700;
+	angle = Math.atan(diff/distance);
+	ctxt.clearRect(0,0,canvas.width,canvas.height);
+	ctxt.font = "bold 20px Arial";
+	ctxt.fillStyle = ' #784212';
+	ctxt.fillText("Score    : "+resll[2],40,30);
+	ctxt.fillText("Position : "+resll[1],40,55);
+	ctxt.fillText("Score    : "+resll[9],600,30);
+	ctxt.fillText("Position : "+resll[8],600,55);
+	ctxt.fillStyle = 'red';
+	ctxt.fillText("Move no.     : "+Math.floor((i-1)/2+1),300,30);
+	ctxt.fillText("Hit Position : "+resll[3],300,55);
+	ctxt.fillText("Missile Type: "+missiles[missiletype-1],300,80);
+	ctxt.drawImage(wall_left,0,0);
+	ctxt.drawImage(wall_right,769,0);
+	ctxt.drawImage(tank_left,30, left_pos-40);
+	ctxt.drawImage(tank_right,729,right_pos-40);
+	drawRotatedImage(missile,70+a,left_pos+b,angle);
+	a+=distance/30;
+	b+=diff/30;
+	if(a>=685 || b >= hit_pos)
+	{
+		a=0;b=0;
+		if(missiletype == 1)
+		{
+			Spritesheet('exp1.png',5,4,710,hit_pos-32);
+		}
+		else if (missiletype == 2)
+		{
+			Spritesheet('exp2.png',5,4,710,hit_pos-32);
+		}
+		else
+		{
+			Spritesheet('exp3.png',6,6,710,hit_pos-32);
+		}
+		//await sleep(1000);
+		//start(i+1);
+	}
+	else{var looper = setTimeout('anim_l('+a+','+b+','+i+')', 16);}
+ }
+ 
+  function anim_r(a,b)
+ {
+	missiletype = parseInt(resll[11]);
+	if(missiletype==1)
+	missile.src = 'images/missile1.png';
+	else if(missiletype==2)
+	missile.src = 'images/missile2.png';
+	else
+	missile.src = 'images/missile3.png';
+ 
+	// range from 40 to 600 only ( 40 is added just to keep calculations from middle of tank, hit position only ranges from 40 to 600)
+	left_pos = parseInt(resll[1]*scale)+40;  // 40 is tank_left.width/2
+	hit_pos = parseInt(resll[10]*scale)+40;
+	if(Math.abs(hit_pos - left_pos) < 41 && hit!=0)
+	{
+	 hit_pos = left_pos+40; 
+	}
+	right_pos = parseInt(resll[8]*scale)+40; // 40 is tank_right.width/2
+	diff =(hit_pos) - (right_pos) ;
+	distance = 700;
+	angle = Math.atan(diff/distance);
+	left =  0;
+	hit = parseInt(resll[12]);
+	var a,b;
+	ctxt.clearRect(0,0,canvas.width,canvas.height);
+	ctxt.font = "bold 20px Arial";
+	ctxt.fillStyle = ' #784212';
+	ctxt.fillText("Score    : "+resll[2],40,30);
+	ctxt.fillText("Position : "+resll[1],40,55);
+	ctxt.fillText("Score    : "+resll[9],600,30);
+	ctxt.fillText("Position : "+resll[8],600,55);
+	ctxt.fillStyle= 'red';
+	ctxt.fillText("Move no.     : "+Math.floor((i-1)/2+1),300,30);
+	ctxt.fillText("Hit Position : "+resll[10],300,55);
+	ctxt.fillText("Missile Type: "+missiles[missiletype-1],300,80);
+	ctxt.drawImage(wall_left,0,0);
+	ctxt.drawImage(wall_right,769,0);
+	ctxt.drawImage(tank_left,30, left_pos-40);
+	ctxt.drawImage(tank_right,729,right_pos-40);
+	drawRotatedImage(missile,730-a,right_pos+b,Math.PI-angle);
+	a+=distance/30;
+	b+=diff/30;
+	if(a>=685 || b >= hit_pos)
+	{
+		a=0;b=0;
+		if(missiletype == 1)
+		{
+			Spritesheet('exp1.png',5,4,20,hit_pos-32);
+		}
+		else if (missiletype == 2)
+		{
+			Spritesheet('exp2.png',5,4,20,hit_pos-32);
+		}
+		else
+		{
+			Spritesheet('exp3.png',6,6,20,hit_pos-32);
+		}
+		//start(i+1);
+	}
+	else{var looper = setTimeout('anim_r('+a+','+b+','+i+')', 16);}
+ }
+readTextFile("xyz.txt");
+//var varname = '<?php echo $_SESSION["userName"]; ?>';
+//var path = '/var/www/html/uploads/'+varname+'_bot.txt';
+//readTextFile(path);
+
+</script>
+</html>
