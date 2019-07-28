@@ -9,7 +9,8 @@
 1st Line: Player1Name Player2Name <br/>
 2nd Line onwards: <br/>
 For Player1: [0]Turn(Boolean) [1]Position(Int) [2]Score(Int) [3]hitPosition(Int) [4]missileType(Int) [5]hit(Boolean) [6]invalidMove(Boolean) <br/>
-Similary values [7-13] for Player2
+Similary values [7-13] for Player2 <br/>
+Player Position Range: 0-100000
 
 <h3 style="text-align: left;">
 <i>Demo Video<br /></i></h3>
